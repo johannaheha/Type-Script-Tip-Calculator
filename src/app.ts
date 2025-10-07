@@ -5,7 +5,7 @@ async function main() {
   const rl = readline.createInterface({ input, output });
   console.log("--- Tip Calculator ---");
   const amountStart = await rl.question("How high is the check?");
-  const amount: number = Number(amountStart.replace(",", "."));
+  const amount = Number(amountStart.replace(",", "."));
   if (Number.isNaN(amount) || amount <= 0) {
     console.log("Invalid amount!");
     rl.close();
@@ -45,9 +45,9 @@ async function main() {
     }
   }
 
-  const tipAmount: number = amount * (tipPercentage / 100);
+  const tipAmount = amount * (tipPercentage / 100);
 
-  const totalBill: number = amount + tipAmount;
+  const totalBill = amount + tipAmount;
 
   console.log(`\nCheck Amount: $${amount}`);
   console.log(`Tip Percentage: ${tipPercentage.toFixed(2)}%`);
