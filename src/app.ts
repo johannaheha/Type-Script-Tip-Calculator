@@ -1,48 +1,67 @@
-import type { UserInput } from "./types";
+import readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 
-import readline from "readline";
-import { stdin as input, stdout as output } from "process";
-
-async function ask(question: string): Promise<string> {
+async function main() {
   const rl = readline.createInterface({ input, output });
-  return new Promise((resolve) =>
-    rl.question(question, (answer: any) => {
-      rl.close();
-      resolve(answer);
-    })
-  );
-}
-
-async function collectUserInput(): Promise<UserInput> {
-  const amount = Number(await ask("How high is the check?"));
-  const tipPercentage = Number(
-    await ask("What percentage tip would you like to give?")
-  );
-  const isSplit =
-    "Yes" == (await ask("Should the bill be split among multiple people? "));
-  if (isSplit) {
-    const splitPeople = Number(
-      await ask("How many people will split the bill?")
-    );
-    return { amount, isSplit, splitPeople, tipPercentage };
-  } else {
-    return { amount, isSplit, tipPercentage };
+  console.log("--- Tip Calculator ---");
+  const amountStart = await rl.question("How high is the check?");
+  const amount: number = Number(amountStart.replace(",", "."));
+  if (Number.isNaN(amount) || amount <= 0) {
+    console.log("Invalid amount!");
+    rl.close();
+    return;
   }
+
+  const tipString = await rl.question("What percentage of tip will you give?");
+  const tipPercentage: number = Number(tipString.replace(",", "."));
+  if (Number.isNaN(tipPercentage) || amount < 0) {
+    console.log("Invalid tip percentage!");
+    rl.close();
+    return;
+  }
+
+  const splitString = (
+    await rl.question("Should the bill be split among multiple people? (y/n)")
+  ).toLowerCase();
+  const validAnswer = ["y", "yes", "n", "no"].includes(splitString);
+
+  if (!validAnswer) {
+    console.log("Invalid answer! Please enter 'y' or 'n'.");
+    rl.close();
+    return;
+  }
+  const isDivided = ["y", "yes"].includes(splitString);
+  let splitByAmountPeople = 1;
+
+  if (isDivided) {
+    const peopleStr = await rl.question(
+      "How many people will split the bill?: "
+    );
+    splitByAmountPeople = parseInt((peopleStr ?? "").trim(), 10);
+    if (!Number.isInteger(splitByAmountPeople) || splitByAmountPeople < 2) {
+      console.log("Invalid number of people!");
+      rl.close();
+      return;
+    }
+  }
+
+  const tipAmount: number = amount * (tipPercentage / 100);
+
+  const totalBill: number = amount + tipAmount;
+
+  console.log(`\nCheck Amount: $${amount}`);
+  console.log(`Tip Percentage: ${tipPercentage.toFixed(2)}%`);
+  console.log(`Tip Amount: $${tipAmount}`);
+  console.log(`Total Bill: $${totalBill}`);
+  console.log(`Divide among people:${isDivided ? "y" : "n"}`);
+
+  if (isDivided) {
+    const eachPersonPays = totalBill / splitByAmountPeople;
+    console.log(`Split between how many people: ${splitByAmountPeople}`);
+    console.log(`Each person pays: ${eachPersonPays.toFixed(2)}`);
+  }
+
+  console.log("-----------------------------");
+  rl.close();
 }
-
-// let input: UserInput = {
-//   amount: 100,
-//   isSplit: true,
-//   splitPeople: 4,
-//   tipPercentage: 15,
-//   currency: "EUR",
-// };
-
-// function processBill(input: UserInput) {
-//   let total = input.amount + (input.amount * input.tipPercentage) / 100;
-// }
-
-(async () => {
-  const UserInput = await collectUserInput();
-  console.log(UserInput);
-})();
+main();
